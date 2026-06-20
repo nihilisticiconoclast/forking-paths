@@ -23,6 +23,14 @@
   }
   .wrap{max-width:1080px;margin:0 auto}
 
+  /* hero: copy on the left, the seeded signature figure on the right */
+  .hero{display:grid;grid-template-columns:1.3fr .7fr;gap:32px;align-items:center}
+  @media (max-width:780px){ .hero{grid-template-columns:1fr} }
+  .figure{margin:0;width:100%;max-width:380px;justify-self:end}
+  @media (max-width:780px){ .figure{justify-self:start} }
+  .figure svg{width:100%;height:auto;display:block;border:1px solid var(--faint);background:var(--paper)}
+  .figcap{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--contour);margin:8px 0 0;max-width:380px}
+
   .eyebrow{
     font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.18em;
     text-transform:uppercase; color:var(--contour); margin:0 0 6px;
@@ -110,7 +118,10 @@
   button.ghost{background:transparent;color:var(--ink)}
   button.ghost:hover{background:var(--paper2)}
   button:disabled{opacity:.32;cursor:default}
-  button:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+  button:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+  /* the single red "route" element: the primary action that walks the path */
+  button.route{background:var(--red);border-color:var(--red);color:var(--paper)}
+  button.route:hover{background:var(--red);opacity:.92}
   .dots{display:flex;gap:7px;margin-left:4px}
   .dot{width:9px;height:9px;border:1.5px solid var(--contour);background:transparent;cursor:pointer}
   .dot.on{background:var(--ink);border-color:var(--ink)}
@@ -125,12 +136,20 @@
   }
 </style>
 </head>
-<body>
+<body data-seed="2M7-forking-paths">
 <div class="wrap">
-  <p class="eyebrow">McElreath · Statistical Rethinking · 2M7</p>
-  <h1>The garden of forking paths</h1>
-  <p class="lede">Three cards: one black/black, one black/white, one white/white. You draw a card and a <b>black</b> face shows. You set it aside, draw a second card from the two that remain, and a <b>white</b> face shows. What's the chance the first card is black on its hidden side?</p>
-  <p class="lede" style="margin-top:8px">No formula — just count every <i>way</i> the data could have happened. Step through below.</p>
+  <div class="hero">
+    <div class="hero-copy">
+      <p class="eyebrow">McElreath · Statistical Rethinking · 2M7</p>
+      <h1>The garden of forking paths</h1>
+      <p class="lede">Three cards: one black/black, one black/white, one white/white. You draw a card and a <b>black</b> face shows. You set it aside, draw a second card from the two that remain, and a <b>white</b> face shows. What's the chance the first card is black on its hidden side?</p>
+      <p class="lede" style="margin-top:8px">No formula — just count every <i>way</i> the data could have happened. Step through below.</p>
+    </div>
+    <div>
+      <figure class="figure" id="sig" aria-label="Contour terrain with a route tunnelling through a barrier ridge"></figure>
+      <p class="figcap">Terrain seeded from this page — a route taking the line <i>through</i> the ridge, not over it. Every page in the family carries a different landscape.</p>
+    </div>
+  </div>
 
   <div class="rule"></div>
 
@@ -148,7 +167,7 @@
 
   <div class="controls">
     <button class="ghost" id="prev" aria-label="Previous step">◂ Back</button>
-    <button id="next" aria-label="Next step">Next ▸</button>
+    <button class="route" id="next" aria-label="Next step">Next ▸</button>
     <div class="dots" id="dots"></div>
   </div>
 
@@ -396,6 +415,17 @@
 
   render(0);
 })();
+</script>
+
+<!-- the seeded signature figure (cuddly-lamp / tunnel-aesthetic) -->
+<script src="tunnel-figure.js"></script>
+<script>
+  // seed = stable + unique to THIS page, so the terrain never reshuffles on
+  // reload but differs from every other page in the family.
+  (function(){
+    var seed = document.body.dataset.seed || location.pathname || document.title;
+    document.getElementById('sig').innerHTML = TunnelFigure.tunnelFigureSVG(seed, {width:480, height:480});
+  })();
 </script>
 </body>
 </html>
