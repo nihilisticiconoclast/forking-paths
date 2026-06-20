@@ -37,10 +37,12 @@ from [`cuddly-lamp`](../cuddly-lamp)): the locked chart-paper palette, the
 Fraunces / Public Sans / IBM Plex Mono type, hard edges, a single red `route`
 element (the **Next** control that walks the path), amber reserved for the
 high-count "winning" branch, and real labels throughout. It carries the
-**seeded signature figure** — a contour map with a route tunnelling through a
-barrier ridge — generated deterministically from this page's seed
-(`2M7-forking-paths`), so the page is unmistakably part of the family while its
-terrain is its own.
+**seeded signature mark** — the small contour-and-route colophon in the
+masthead, the default quiet `mark` variant (no caption, no physics labels) —
+generated deterministically from this page's seed (`2M7-forking-paths`), so the
+page is unmistakably part of the family while its terrain is its own. The loud
+`full` figure is reserved for pages actually about terrain or sampling; this is
+a counting argument, so it gets the quiet mark.
 
 ```
 forking-paths/
