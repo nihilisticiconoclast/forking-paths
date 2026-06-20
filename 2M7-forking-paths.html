@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2M7 — Garden of Forking Paths</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,560;9..144,640&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDE7D3; --paper2:#E4DCBF; --ink:#4A3823; --contour:#7A5C3E;
+    --index:#5A4225; --teal:#3E7C8C; --amber:#E0922B; --red:#C0432B;
+    --faint:#C9BE9E;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:"Public Sans",system-ui,sans-serif;
+    line-height:1.5; padding:32px 20px 64px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto}
+
+  .eyebrow{
+    font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:.18em;
+    text-transform:uppercase; color:var(--contour); margin:0 0 6px;
+  }
+  h1{
+    font-family:"Fraunces",serif; font-weight:640; font-size:clamp(28px,5vw,44px);
+    line-height:1.04; margin:0 0 10px; letter-spacing:-.01em;
+  }
+  .lede{max-width:64ch; margin:0 0 4px; font-size:16px}
+  .lede code{font-family:"IBM Plex Mono",monospace; font-size:.92em; background:var(--paper2); padding:1px 4px; border:1px solid var(--faint)}
+
+  .rule{height:1px;background:var(--contour);opacity:.5;margin:22px 0}
+
+  .stage-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:4px}
+  .stage-tag{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.14em;color:var(--contour);border:1px solid var(--contour);padding:3px 8px}
+  .stage-title{font-family:"Fraunces",serif;font-weight:560;font-size:22px;margin:0}
+  .stage-sub{font-size:15px;color:var(--index);margin:6px 0 0;min-height:22px}
+
+  .panel{
+    display:grid; grid-template-columns:1.55fr 1fr; gap:24px; align-items:start;
+    margin-top:18px;
+  }
+  @media (max-width:780px){ .panel{grid-template-columns:1fr} }
+
+  .stage-svg{width:100%;height:auto;display:block;background:var(--paper);border:1px solid var(--faint)}
+
+  /* nodes / edges */
+  .edge{stroke:var(--faint);stroke-width:1.4;fill:none;transition:opacity .45s, stroke .45s, stroke-width .45s}
+  .edge.alive{stroke:var(--teal);stroke-width:2.4}
+  .edge.win-bb{stroke:var(--amber);stroke-width:2.8}
+  .edge.win-bw{stroke:var(--teal);stroke-width:2.6}
+  .edge.pruned{stroke:var(--faint);stroke-width:1;opacity:.28}
+  .edge.hidden{opacity:0}
+
+  .face{transition:opacity .45s, stroke .45s, stroke-width .45s, fill .45s}
+  .face .ring{fill:none;stroke:none;transition:stroke .45s, stroke-width .45s, opacity .45s;opacity:0}
+  .face.alive .ring{stroke:var(--teal);stroke-width:2.4;opacity:1}
+  .face.win-bb .ring{stroke:var(--amber);stroke-width:3;opacity:1}
+  .face.win-bw .ring{stroke:var(--teal);stroke-width:3;opacity:1}
+  .face.pruned{opacity:.22}
+  .face.hidden{opacity:0}
+  .cap{font-family:"IBM Plex Mono",monospace;font-size:10.5px;fill:var(--contour);transition:opacity .45s}
+  .cap.pruned{opacity:.3}.cap.hidden{opacity:0}
+
+  .card-lab{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;fill:var(--index)}
+  .card-lab.pruned{opacity:.3}
+  .grp{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.04em;fill:var(--contour)}
+  .grp.pruned{opacity:.35}.grp.hidden{opacity:0}
+
+  /* tally card */
+  .tally{border:1px solid var(--contour);background:var(--paper2);padding:18px 18px 16px}
+  .tally h3{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--contour);margin:0 0 12px;font-weight:600}
+  .row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px dashed var(--faint)}
+  .row:last-child{border-bottom:none}
+  .chip{font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;padding:2px 7px;border:1px solid var(--contour);min-width:42px;text-align:center}
+  .chip.bb{color:var(--amber);border-color:var(--amber)}
+  .chip.bw{color:var(--teal);border-color:var(--teal)}
+  .chip.ww{color:var(--contour);opacity:.7}
+  .mref{font-family:"IBM Plex Mono",monospace;font-size:14px;margin-left:auto;font-weight:500}
+  .mref .x{color:var(--contour)}
+  .dead{color:var(--contour);opacity:.7;font-style:italic;font-size:13px}
+  .total{margin-top:12px;padding-top:12px;border-top:1.5px solid var(--ink);display:flex;align-items:baseline;justify-content:space-between}
+  .total .lab{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.06em;color:var(--index)}
+  .total .val{font-family:"IBM Plex Mono",monospace;font-size:20px;font-weight:600}
+
+  .post{margin-top:14px}
+  .post .barwrap{display:flex;height:30px;border:1px solid var(--ink);overflow:hidden}
+  .post .seg{display:flex;align-items:center;justify-content:center;font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;color:var(--paper);transition:flex-grow .6s}
+  .post .seg.bb{background:var(--amber);flex-grow:0}
+  .post .seg.bw{background:var(--teal);flex-grow:0}
+  .post .leg{display:flex;justify-content:space-between;margin-top:7px;font-family:"IBM Plex Mono",monospace;font-size:12px}
+  .post .leg .a{color:var(--amber);font-weight:600}
+  .post .leg .b{color:var(--teal);font-weight:600}
+  .answer{font-family:"Fraunces",serif;font-size:17px;margin:14px 0 0;font-weight:560}
+  .answer .n{color:var(--amber)}
+
+  /* controls */
+  .controls{display:flex;align-items:center;gap:10px;margin-top:22px;flex-wrap:wrap}
+  button{
+    font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600;letter-spacing:.04em;
+    background:var(--ink);color:var(--paper);border:1px solid var(--ink);
+    padding:9px 16px;cursor:pointer;transition:background .15s,color .15s;
+  }
+  button:hover{background:var(--index)}
+  button.ghost{background:transparent;color:var(--ink)}
+  button.ghost:hover{background:var(--paper2)}
+  button:disabled{opacity:.32;cursor:default}
+  button:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+  .dots{display:flex;gap:7px;margin-left:4px}
+  .dot{width:9px;height:9px;border:1.5px solid var(--contour);background:transparent;cursor:pointer}
+  .dot.on{background:var(--ink);border-color:var(--ink)}
+
+  .principle{margin-top:34px;border-left:3px solid var(--teal);padding:2px 0 2px 16px;max-width:70ch;font-size:14.5px;color:var(--index)}
+  .principle b{color:var(--ink)}
+  .principle code{font-family:"IBM Plex Mono",monospace;font-size:.92em}
+  .foot{margin-top:30px;font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--contour)}
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">McElreath · Statistical Rethinking · 2M7</p>
+  <h1>The garden of forking paths</h1>
+  <p class="lede">Three cards: one black/black, one black/white, one white/white. You draw a card and a <b>black</b> face shows. You set it aside, draw a second card from the two that remain, and a <b>white</b> face shows. What's the chance the first card is black on its hidden side?</p>
+  <p class="lede" style="margin-top:8px">No formula — just count every <i>way</i> the data could have happened. Step through below.</p>
+
+  <div class="rule"></div>
+
+  <div class="stage-head">
+    <span class="stage-tag" id="stageTag">STEP 0 / 3</span>
+    <h2 class="stage-title" id="stageTitle">The candidates</h2>
+  </div>
+  <p class="stage-sub" id="stageSub">Before any observation, any of the three cards could be the one in your hand.</p>
+
+  <div class="panel">
+    <svg class="stage-svg" id="tree" viewBox="0 0 760 600" role="img" aria-label="Forking paths diagram"></svg>
+
+    <div class="tally" id="tally" aria-live="polite"></div>
+  </div>
+
+  <div class="controls">
+    <button class="ghost" id="prev" aria-label="Previous step">◂ Back</button>
+    <button id="next" aria-label="Next step">Next ▸</button>
+    <div class="dots" id="dots"></div>
+  </div>
+
+  <div class="principle">
+    <b>The counting rule.</b> Each card offers a number of ways to match an observation — one way per matching face. For a <i>sequence</i> of observations you multiply the ways along each branch, and for the second draw you add up the matching faces across <i>both</i> remaining cards (any of them could be the card you picked). Probabilities are just these counts, rescaled to sum to one — which is why the answer here, <code>6 : 2 : 0 → 0.75</code>, is identical to the one Bayes' formula hands you.
+  </div>
+
+  <p class="foot">Drawn in the tunnel palette · paper · ink · teal · amber · route-red</p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const SVG="http://www.w3.org/2000/svg";
+  const RH=34, TOP=46;
+  const COLX={card:78, f1:300, f2:540};
+  const tree=document.getElementById('tree');
+
+  function ny(row){return TOP+row*RH;}
+  function el(tag,attrs){const e=document.createElementNS(SVG,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
+
+  // ---- nodes -------------------------------------------------------------
+  // cards (conjectures)
+  const cards=[
+    {id:'cardBB',row:3.5,faces:['B','B'],lab:'BB',branch:'bb'},
+    {id:'cardBW',row:10.75,faces:['B','W'],lab:'BW',branch:'bw'},
+    {id:'cardWW',row:13.5,faces:['W','W'],lab:'WW',branch:'ww'},
+  ];
+  // first-draw faces shown
+  const f1=[
+    {id:'f_BB_1',row:1.5,face:'B',parent:'cardBB',branch:'bb'},
+    {id:'f_BB_2',row:5.5,face:'B',parent:'cardBB',branch:'bb'},
+    {id:'f_BW_1',row:9.5,face:'B',parent:'cardBW',branch:'bw'},
+    {id:'f_BW_2',row:12,  face:'W',parent:'cardBW',branch:'bw'},
+    {id:'f_WW_1',row:13,  face:'W',parent:'cardWW',branch:'ww'},
+    {id:'f_WW_2',row:14,  face:'W',parent:'cardWW',branch:'ww'},
+  ];
+  // second-draw faces, only under surviving (black) first faces
+  const f2=[
+    {id:'s_BB1_a',row:0,face:'B',src:'BW',parent:'f_BB_1',branch:'bb'},
+    {id:'s_BB1_b',row:1,face:'W',src:'BW',parent:'f_BB_1',branch:'bb'},
+    {id:'s_BB1_c',row:2,face:'W',src:'WW',parent:'f_BB_1',branch:'bb'},
+    {id:'s_BB1_d',row:3,face:'W',src:'WW',parent:'f_BB_1',branch:'bb'},
+    {id:'s_BB2_a',row:4,face:'B',src:'BW',parent:'f_BB_2',branch:'bb'},
+    {id:'s_BB2_b',row:5,face:'W',src:'BW',parent:'f_BB_2',branch:'bb'},
+    {id:'s_BB2_c',row:6,face:'W',src:'WW',parent:'f_BB_2',branch:'bb'},
+    {id:'s_BB2_d',row:7,face:'W',src:'WW',parent:'f_BB_2',branch:'bb'},
+    {id:'s_BW1_a',row:8, face:'B',src:'BB',parent:'f_BW_1',branch:'bw'},
+    {id:'s_BW1_b',row:9, face:'B',src:'BB',parent:'f_BW_1',branch:'bw'},
+    {id:'s_BW1_c',row:10,face:'W',src:'WW',parent:'f_BW_1',branch:'bw'},
+    {id:'s_BW1_d',row:11,face:'W',src:'WW',parent:'f_BW_1',branch:'bw'},
+  ];
+
+  const pos={};
+  cards.forEach(c=>pos[c.id]={x:COLX.card+23,y:ny(c.row)}); // right edge of card rect
+  f1.forEach(n=>pos[n.id]={x:COLX.f1,y:ny(n.row)});
+  f2.forEach(n=>pos[n.id]={x:COLX.f2,y:ny(n.row)});
+
+  // ---- build edges + nodes ----------------------------------------------
+  const edges=[];
+  f1.forEach(n=>edges.push({from:n.parent,to:n.id,kind:'cf',branch:n.branch}));
+  f2.forEach(n=>edges.push({from:n.parent,to:n.id,kind:'ff',branch:n.branch}));
+
+  const edgeEls={}, nodeEls={};
+
+  // edges first (under nodes)
+  edges.forEach(e=>{
+    const a=pos[e.from], b=pos[e.to];
+    const midx=(a.x+b.x)/2;
+    const d=`M ${a.x} ${a.y} C ${midx} ${a.y}, ${midx} ${b.y}, ${b.x} ${b.y}`;
+    const p=el('path',{d:d,class:'edge'});
+    tree.appendChild(p);
+    edgeEls[e.from+'>'+e.to]=p;
+  });
+
+  // group labels on far left
+  [['1ST CARD: BB',ny(3.5)],['1ST CARD: BW',ny(10.75)],['1ST CARD: WW',ny(13.5)]].forEach(([t,y],i)=>{
+    const g=el('text',{x:6,y:y-30,class:'grp',id:'grp'+i});
+    g.textContent=t; tree.appendChild(g);
+  });
+
+  // card nodes (two-face dominoes)
+  cards.forEach(c=>{
+    const cx=COLX.card, cy=ny(c.row);
+    const g=el('g',{class:'face',id:c.id});
+    const w=21,h=27,gap=2;
+    [0,1].forEach(i=>{
+      const fx=cx-(w+gap/2)+i*(w+gap);
+      const dark=c.faces[i]==='B';
+      g.appendChild(el('rect',{x:fx,y:cy-h/2,width:w,height:h,
+        fill:dark?'var(--ink)':'var(--paper)',stroke:'var(--contour)','stroke-width':1.2}));
+    });
+    g.appendChild(el('rect',{class:'ring',x:cx-(w+gap/2)-3,y:cy-h/2-3,width:2*w+gap+6,height:h+6}));
+    const lab=el('text',{x:cx,y:cy+h/2+13,class:'card-lab','text-anchor':'middle'});
+    lab.textContent=c.lab; g.appendChild(lab);
+    tree.appendChild(g); nodeEls[c.id]=g;
+  });
+
+  // face circle helper
+  function faceNode(n,withCap){
+    const p=pos[n.id]; const r=12; const dark=n.face==='B';
+    const g=el('g',{class:'face',id:n.id});
+    g.appendChild(el('circle',{class:'ring',cx:p.x,cy:p.y,r:r+5}));
+    g.appendChild(el('circle',{cx:p.x,cy:p.y,r:r,
+      fill:dark?'var(--ink)':'var(--paper)',stroke:'var(--contour)','stroke-width':1.4}));
+    g.appendChild(el('text',{x:p.x,y:p.y+4,'text-anchor':'middle',
+      'font-family':'"IBM Plex Mono",monospace','font-size':12,'font-weight':600,
+      fill:dark?'var(--paper)':'var(--ink)'})).textContent=n.face;
+    if(withCap){
+      const cap=el('text',{x:p.x+20,y:p.y+4,class:'cap'});
+      cap.textContent='from '+n.src; g.appendChild(cap);
+    }
+    tree.appendChild(g); nodeEls[n.id]=g;
+  }
+  f1.forEach(n=>faceNode(n,false));
+  f2.forEach(n=>faceNode(n,true));
+
+  // column headers
+  [['the card',COLX.card],['1st face up',COLX.f1],['2nd face up',COLX.f2]].forEach(([t,x])=>{
+    const h=el('text',{x:x,y:18,'text-anchor':'middle',class:'grp'});
+    h.textContent=t; tree.appendChild(h);
+  });
+
+  // ---- status engine -----------------------------------------------------
+  function cardStatus(c,stage){
+    if(stage===0) return 'neutral';
+    return c.id==='cardWW' ? 'pruned' : (stage>=3 ? 'neutral' : 'neutral');
+  }
+  function f1Status(n,stage){
+    if(stage===0) return 'hidden';
+    return n.face==='B' ? 'alive' : 'pruned';
+  }
+  function f2Status(n,stage){
+    if(stage<2) return 'hidden';
+    if(n.face!=='W') return 'pruned';
+    if(stage>=3) return n.branch==='bb' ? 'win-bb':'win-bw';
+    return 'alive';
+  }
+  function applyClass(node,base,status){ node.setAttribute('class',base+' '+status); }
+
+  function edgeStatus(e,stage){
+    const child = e.kind==='cf' ? f1Status(f1.find(x=>x.id===e.to),stage)
+                                : f2Status(f2.find(x=>x.id===e.to),stage);
+    if(child==='hidden') return 'hidden';
+    if(child==='pruned') return 'pruned';
+    // alive / win → parent must also be alive
+    if(e.kind==='ff'){ // parent is a first face (B, alive)
+      return stage>=3 ? (e.branch==='bb'?'win-bb':'win-bw') : 'alive';
+    }
+    // cf edge to a black first-face
+    return stage>=3 ? (e.branch==='bb'?'win-bb':'win-bw') : 'alive';
+  }
+
+  function render(stage){
+    cards.forEach(c=>{
+      const s=cardStatus(c,stage);
+      applyClass(nodeEls[c.id],'face', s==='pruned'?'pruned':'');
+      const lab=nodeEls[c.id].querySelector('.card-lab');
+      if(lab) lab.setAttribute('class','card-lab'+(s==='pruned'?' pruned':''));
+    });
+    f1.forEach(n=>applyClass(nodeEls[n.id],'face',f1Status(n,stage)));
+    f2.forEach(n=>{
+      const s=f2Status(n,stage);
+      applyClass(nodeEls[n.id],'face',s);
+      const cap=nodeEls[n.id].querySelector('.cap');
+      if(cap) cap.setAttribute('class','cap'+(s==='hidden'?' hidden':(s==='pruned'?' pruned':'')));
+    });
+    edges.forEach(e=>applyClass(edgeEls[e.from+'>'+e.to],'edge',edgeStatus(e,stage)));
+    // group labels
+    document.getElementById('grp0').setAttribute('class','grp'+(stage===0?' hidden':''));
+    document.getElementById('grp1').setAttribute('class','grp'+(stage===0?' hidden':''));
+    document.getElementById('grp2').setAttribute('class','grp'+(stage===0?' hidden':(stage>=1?' pruned':'')));
+    renderTally(stage);
+    // stage chrome
+    document.getElementById('stageTag').textContent='STEP '+stage+' / 3';
+    document.getElementById('stageTitle').textContent=STAGES[stage].title;
+    document.getElementById('stageSub').textContent=STAGES[stage].sub;
+    document.getElementById('prev').disabled=(stage===0);
+    document.getElementById('next').disabled=(stage===3);
+    [...document.querySelectorAll('.dot')].forEach((d,i)=>d.setAttribute('class','dot'+(i===stage?' on':'')));
+  }
+
+  // ---- tally content -----------------------------------------------------
+  const tallyBox=document.getElementById('tally');
+  function renderTally(stage){
+    let h='';
+    if(stage===0){
+      h=`<h3>The count, so far</h3>
+        <div class="row"><span class="chip bb">BB</span><span>black + black</span></div>
+        <div class="row"><span class="chip bw">BW</span><span>black + white</span></div>
+        <div class="row"><span class="chip ww">WW</span><span>white + white</span></div>
+        <p class="dead" style="margin:12px 0 0">Nothing observed yet — counting starts at the next step.</p>`;
+    } else if(stage===1){
+      h=`<h3>Ways to show a black 1st face</h3>
+        <div class="row"><span class="chip bb">BB</span><span>two black faces</span><span class="mref">2</span></div>
+        <div class="row"><span class="chip bw">BW</span><span>one black face</span><span class="mref">1</span></div>
+        <div class="row"><span class="chip ww">WW</span><span class="dead">no black face</span><span class="mref">0</span></div>
+        <p class="dead" style="margin:12px 0 0">WW is ruled out by the very first observation.</p>`;
+    } else if(stage===2){
+      h=`<h3>× ways the 2nd card shows white</h3>
+        <div class="row"><span class="chip bb">BB</span><span>remaining BW, WW → 1+2 white</span><span class="mref">2<span class="x">×</span>3 = 6</span></div>
+        <div class="row"><span class="chip bw">BW</span><span>remaining BB, WW → 0+2 white</span><span class="mref">1<span class="x">×</span>2 = 2</span></div>
+        <div class="row"><span class="chip ww">WW</span><span class="dead">already eliminated</span><span class="mref">0</span></div>
+        <div class="total"><span class="lab">surviving paths</span><span class="val">6 + 2 + 0 = 8</span></div>`;
+    } else {
+      h=`<h3>Posterior over the 1st card</h3>
+        <div class="row"><span class="chip bb">BB</span><span>6 of 8 paths</span><span class="mref" style="color:var(--amber)">0.75</span></div>
+        <div class="row"><span class="chip bw">BW</span><span>2 of 8 paths</span><span class="mref" style="color:var(--teal)">0.25</span></div>
+        <div class="post">
+          <div class="barwrap"><div class="seg bb" id="segbb">75%</div><div class="seg bw" id="segbw">25%</div></div>
+          <div class="leg"><span class="a">■ first card BB</span><span class="b">first card BW ■</span></div>
+        </div>
+        <p class="answer">The hidden side is black with probability <span class="n">0.75</span>.</p>`;
+    }
+    tallyBox.innerHTML=h;
+    if(stage===3){ requestAnimationFrame(()=>{ // animate bar
+      document.getElementById('segbb').style.flexGrow='6';
+      document.getElementById('segbw').style.flexGrow='2';
+    });}
+  }
+
+  // ---- stages chrome -----------------------------------------------------
+  const STAGES=[
+    {title:'The candidates', sub:'Before any observation, any of the three cards could be the one in your hand.'},
+    {title:'Observation 1 — a black face', sub:'Keep only the faces that are black. WW dies; BB keeps two ways; BW keeps one.'},
+    {title:'Observation 2 — a white face on the 2nd card', sub:'Down each surviving branch, draw the 2nd card from the two left over and keep its white faces. Multiply the ways.'},
+    {title:'Read off the posterior', sub:'Count the surviving complete paths. Six lead from a BB first card, two from BW.'},
+  ];
+
+  // ---- controls ----------------------------------------------------------
+  let stage=0; const MAX=3;
+  const dots=document.getElementById('dots');
+  STAGES.forEach((_,i)=>{
+    const b=document.createElement('button'); b.className='dot'+(i===0?' on':'');
+    b.setAttribute('aria-label','Go to step '+i);
+    b.addEventListener('click',()=>{stage=i;render(stage);});
+    dots.appendChild(b);
+  });
+  document.getElementById('next').addEventListener('click',()=>{if(stage<MAX){stage++;render(stage);}});
+  document.getElementById('prev').addEventListener('click',()=>{if(stage>0){stage--;render(stage);}});
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'&&stage<MAX){stage++;render(stage);}
+    if(e.key==='ArrowLeft'&&stage>0){stage--;render(stage);}
+  });
+
+  render(0);
+})();
+</script>
+</body>
+</html>
