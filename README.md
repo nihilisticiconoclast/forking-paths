@@ -6,8 +6,8 @@ question by *counting*, not by formula: you watch every way the data could have
 happened, prune the ways that don't match what you saw, and read the posterior
 straight off the surviving counts.
 
-Open [`2M7-forking-paths.html`](2M7-forking-paths.html) in any browser. No build
-step, no dependencies, no network needed beyond the web fonts.
+Open [`index.html`](index.html) in any browser, or visit the GitHub Pages site.
+No build step, no dependencies, no network needed beyond the web fonts.
 
 ## The problem
 
@@ -44,10 +44,15 @@ terrain is its own.
 
 ```
 forking-paths/
-├─ 2M7-forking-paths.html   ← the walkthrough (self-contained: markup, styles, logic)
-├─ tunnel-figure.js         ← vendored seeded signature generator (from cuddly-lamp)
+├─ index.html        ← the walkthrough (self-contained: markup, styles, logic)
+├─ tunnel-figure.js  ← vendored seeded signature generator (from cuddly-lamp)
 └─ README.md
 ```
+
+The page is named `index.html` so GitHub Pages serves it at the site root (it
+was previously `2M7-forking-paths.html`). The signature figure's seed is fixed
+in the page (`data-seed="2M7-forking-paths"`), so the rename doesn't change the
+terrain.
 
 The figure generator is a copy of `cuddly-lamp/assets/tunnel-figure.js`; keep it
 in step with the source if the design system updates.
