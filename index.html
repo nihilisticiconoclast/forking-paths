@@ -7,6 +7,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,560;9..144,640&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- LOCKED LAYER — the "Tunnel" tokens, linked from cuddly-lamp (never inlined).
+     The page's own :root below only ADDS the few extra roles this page needs. -->
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/nihilisticiconoclast/cuddly-lamp@main/assets/tokens.css">
 <style>
   :root{
     --paper:#EDE7D3; --paper2:#E4DCBF; --ink:#4A3823; --contour:#7A5C3E;
@@ -165,6 +169,9 @@
     <button class="route" id="next" aria-label="Next step">Next ▸</button>
     <div class="dots" id="dots"></div>
   </div>
+
+  <!-- per-page doodle: a seeded scribble, off to the right, between sections -->
+  <div class="doodle doodle--right doodle--bleed-right" id="doodle"></div>
 
   <div class="principle">
     <b>The counting rule.</b> Each card offers a number of ways to match an observation — one way per matching face. For a <i>sequence</i> of observations you multiply the ways along each branch, and for the second draw you add up the matching faces across <i>both</i> remaining cards (any of them could be the card you picked). Probabilities are just these counts, rescaled to sum to one — which is why the answer here, <code>6 : 2 : 0 → 0.75</code>, is identical to the one Bayes' formula hands you.
@@ -412,15 +419,16 @@
 })();
 </script>
 
-<!-- the seeded signature mark (cuddly-lamp / tunnel-aesthetic) — small, silent,
-     the recurring colophon; default 'mark' variant, no caption or labels -->
-<script src="tunnel-figure.js"></script>
+<!-- the signature generator (cuddly-lamp / tunnel-aesthetic) — linked from the
+     CDN, never inlined, so the figure logic stays in lock-step with the tokens -->
+<script src="https://cdn.jsdelivr.net/gh/nihilisticiconoclast/cuddly-lamp@main/assets/tunnel-figure.js"></script>
 <script>
-  // seed = stable + unique to THIS page, so the mark never reshuffles on
-  // reload but differs from every other page in the family.
+  // The FIXED house mark (same everywhere) plus a per-page doodle seeded from
+  // this page — stable on reload, different from every other page in the family.
   (function(){
     var seed = document.body.dataset.seed || location.pathname || document.title;
-    document.getElementById('sig').innerHTML = TunnelFigure.tunnelFigureSVG(seed);
+    document.getElementById('sig').innerHTML = TunnelFigure.tunnelFigureSVG(null, { variant: 'mark' });
+    document.getElementById('doodle').innerHTML = TunnelFigure.tunnelFigureSVG(seed, { variant: 'doodle' });
   })();
 </script>
 </body>
