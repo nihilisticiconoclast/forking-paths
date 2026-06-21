@@ -133,14 +133,13 @@
   .principle code{font-family:"IBM Plex Mono",monospace;font-size:.92em}
   .foot{margin-top:30px;font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--contour)}
 
-  /* the per-page doodle: a margin decoration, NOT a section of its own. Pulled out
-     of flow and tucked into the right gutter, behind the content, so it never adds
-     an empty band, shoves the page around, or fights the text. */
-  .wrap{position:relative}
-  .doodle{
-    position:absolute; top:clamp(72px,10vw,120px); right:0;
-    width:clamp(140px,18vw,260px); margin:0; opacity:.6; z-index:-1; pointer-events:none;
-  }
+  /* the per-page doodle: a margin decoration placed at RANDOM. JS drops it into one
+   of six edge slots on load — left/right × top/middle/bottom — bleeding into the
+   page gutter and sitting behind the content, so it never lands directly behind the
+   text or shoves the page around. (overflow-x is clipped so the bleed can't scroll.) */
+html{overflow-x:hidden}
+body{position:relative}
+.doodle{position:absolute;width:clamp(150px,20vw,260px);margin:0;opacity:.6;z-index:-1;pointer-events:none}
 
   @media (prefers-reduced-motion: reduce){
     *{transition:none !important}
@@ -437,7 +436,23 @@
   (function(){
     var seed = document.body.dataset.seed || location.pathname || document.title;
     document.getElementById('sig').innerHTML = TunnelFigure.tunnelFigureSVG(null, { variant: 'mark' });
-    document.getElementById('doodle').innerHTML = TunnelFigure.tunnelFigureSVG(seed, { variant: 'doodle' });
+document.getElementById('doodle').innerHTML = TunnelFigure.tunnelFigureSVG(seed, { variant: 'doodle' });
+
+    // doodle position — random each load: one of six edge slots (left/right ×
+    // top/middle/bottom), bleeding into the gutter so it never sits behind the text.
+    (function (d) {
+      if (!d) return;
+      var side = Math.random() < 0.5 ? 'left' : 'right';
+      var vert = ['top', 'middle', 'bottom'][Math.floor(Math.random() * 3)];
+      d.style.top = d.style.bottom = d.style.left = d.style.right = 'auto';
+      var tx, ty = '';
+      if (side === 'left') { d.style.left = '0'; tx = 'translateX(-42%)'; }
+      else { d.style.right = '0'; tx = 'translateX(42%)'; }
+      if (vert === 'top') d.style.top = 'clamp(80px,12vh,140px)';
+      else if (vert === 'middle') { d.style.top = '50%'; ty = ' translateY(-50%)'; }
+      else d.style.bottom = 'clamp(40px,8vh,100px)';
+      d.style.transform = tx + ty;
+    })(document.getElementById('doodle'));
   })();
 </script>
 </body>
